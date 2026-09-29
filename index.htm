@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Daily Calc">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>My Daily Calculator</title>
+  <style>
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body {
+      margin:0; min-height:100vh; display:flex; justify-content:center; align-items:center;
+      background:#f3f4f6; font-family:Arial,sans-serif; color:#111827; padding:20px;
+    }
+    .card {
+      width:100%; max-width:420px; background:#fff; border-radius:24px;
+      padding:24px; box-shadow:0 12px 35px rgba(0,0,0,.12);
+    }
+    h1 { margin:0 0 20px; text-align:center; font-size:24px; }
+    .balance {
+      text-align:center; background:#111827; color:white; border-radius:18px;
+      padding:24px 12px; margin-bottom:18px;
+    }
+    .label { font-size:13px; opacity:.75; letter-spacing:1px; }
+    #total { font-size:40px; font-weight:700; margin-top:8px; overflow-wrap:anywhere; }
+    input {
+      width:100%; padding:17px; font-size:24px; border:2px solid #d1d5db;
+      border-radius:14px; outline:none; margin-bottom:12px;
+    }
+    input:focus { border-color:#111827; }
+    .row { display:flex; gap:10px; }
+    button {
+      border:0; border-radius:14px; padding:16px 10px; font-size:17px;
+      font-weight:700; cursor:pointer; flex:1;
+    }
+    .add { background:#16a34a; color:white; }
+    .sub { background:#dc2626; color:white; }
+    .reset { width:100%; margin-top:12px; background:#e5e7eb; color:#111827; }
+    .hint { text-align:center; color:#6b7280; font-size:12px; margin:14px 0 0; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>My Daily Calculator</h1>
+    <section class="balance">
+      <div class="label">CURRENT TOTAL</div>
+      <div id="total">₹0</div>
+    </section>
+    <input id="amount" type="number" inputmode="decimal" step="0.01" placeholder="Enter amount" autofocus>
+    <div class="row">
+      <button class="add" id="add">+ ADD</button>
+      <button class="sub" id="sub">− SUBTRACT</button>
+    </div>
+    <button class="reset" id="reset">Reset Total</button>
+    <p class="hint">Your total is saved on this device.</p>
+  </main>
+<script>
+  const KEY = "myDailyCalculatorTotal";
+  let total = Number(localStorage.getItem(KEY)) || 0;
+  const amount = document.getElementById("amount");
+  const totalEl = document.getElementById("total");
+
+  function render() {
+    totalEl.textContent = "₹" + total.toLocaleString("en-IN", {maximumFractionDigits:2});
+  }
+  function value() {
+    const n = Number(amount.value);
+    return Number.isFinite(n) ? Math.abs(n) : null;
+  }
+  function commit(next) {
+    total = Math.round((next + Number.EPSILON) * 100) / 100;
+    localStorage.setItem(KEY, String(total));
+    amount.value = "";
+    render();
+    amount.focus();
+  }
+  document.getElementById("add").onclick = () => {
+    const n=value(); if(n===null) return; commit(total+n);
+  };
+  document.getElementById("sub").onclick = () => {
+    const n=value(); if(n===null) return; commit(total-n);
+  };
+  document.getElementById("reset").onclick = () => {
+    if(confirm("Reset total to ₹0?")) commit(0);
+  };
+  amount.addEventListener("keydown", e => { if(e.key==="Enter") document.getElementById("add").click(); });
+  render();
+
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    navigator.serviceWorker.register("./sw.js");
+  }
+</script>
+</body>
+</html>
